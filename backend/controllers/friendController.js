@@ -37,10 +37,13 @@ module.exports.sendRequest = async (req, res, next) => {
     });
 
   try {
-  
     const request = await Friend.find(
       { $and: [{ from: req.body.from }, { to: req.body.to }, { status: 3 }] }
-    ).then((data)=>data)
+    ).then((data)=>{return Friend.findOneAndUpdate(
+      { $and: [{ from: req.body.from }, { to: req.body.to }] },
+      { $set: { status: 3 } },
+      { upsert: true, new: true }
+    ); })
     .catch((err)=>{
       return Friend.findOneAndUpdate(
         { $and: [{ from: req.body.from }, { to: req.body.to }] },
