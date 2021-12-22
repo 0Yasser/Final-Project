@@ -197,15 +197,13 @@ Group model
 
 ### Trello/Kanban
 
-[Link to your trello board](https://trello.com/b/nY1pWVpp/final-project) or picture of your physical board
+[Trello Link](https://trello.com/b/nY1pWVpp/final-project)
 
 ### Git
 
 The url to your repository and to your deployed project
 
-[Client repository Link](https://github.com/0Yasser/Final-Project)
-
-[Server repository Link](https://github.com/screeeen/project-server)
+[Repository Link](https://github.com/0Yasser/Final-Project)
 
 [Deployed App Link](http://heroku.com/)
 
