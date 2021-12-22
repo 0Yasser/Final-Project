@@ -10,12 +10,10 @@
 
 ***ChatUp*** it's a Chatting app.
 
-***dataBASE*** has been developed as a part of the final project in [Ironhack](https://www.ironhack.com/es/desarrollo-web/barcelona?utm_source=google-sea&utm_medium=cpc&utm_campaign=BCN_app_campus_brand_GA_ES&utm_term={keywords}&gclid=Cj0KCQjwo6D4BRDgARIsAA6uN19LKsx0pvTH-iUz-RfrGakzau9RGdhJaixWuX32X92njICzz66RYbAaAncuEALw_wcB) Web Developement bootcamp.
-
 ## User Stories
 
-- **Signup:** As a user I can sign up in the platform so that I can start playing into competition
-- **Login:** As a user I can login to the platform so that I can log my exit points
+- **Signup:** As a user I can sign up.
+- **Login:** As a user I can login.
 - **Logout:** As a user I can logout from the platform so no one else can use it
 - **Send A Request:** As a user I can send a friend request to other users
 - **Replay to a Request:** As a user I can replay to a friend request by either accepting or regecting it.
@@ -30,9 +28,9 @@
 
 User profile:
 
-- see my profile
-- see exit point
-- 
+- ////
+
+  
 
 
 
@@ -48,14 +46,6 @@ User profile:
 | `/profile`          | ProfilePage      | user only `<PrivateRoute>` | Profile screen, link to homepage                             |
 | `/conversation/:id` | ConversationPage | user only `<PrivateRoute>` | Conversation screen, link to homepage                        |
 | `/group/:id`        | GroupPage        | user only `<PrivateRoute>` | Group screen, link to homepage                               |
-|                     |                  |                            |                                                              |
-|                     |                  |                            |                                                              |
-|                     |                  |                            |                                                              |
-|                     |                  |                            |                                                              |
-|                     |                  |                            |                                                              |
-|                     |                  |                            |                                                              |
-|                     |                  |                            |                                                              |
-|                     |                  |                            |                                                              |
 
 ## Components
 
@@ -71,25 +61,24 @@ User profile:
 ## Services
 
 - Auth Service
-  - auth.login(user)
-  - auth.signup(user)
-  - auth.logout()
-  - auth.me()
-  - auth.getUser() // synchronous
+  - user.create_user()
+  - user.log_user()
 - User Service
-  - user.detail(id)
+  - user.get_user_from_token()
+  - user.get_username()
+  - user.delete_account()
 - Friends Service
-  - friends.get()
-  - friends.sendRequest(id)
-  - friends.replayToRequest(id)
-  - friends.remove(id)
+  - friends.sendRequest()
+  - friends.replayToRequest()
+  - friends.removeFriend()
 - Group Service
-  - group.get()
-  - group.create()
-  - group.delete(id)
-  - group.deleteMember(id)
-  - group.addMember(id)
-  - group.leave(id)
+  - group.getGroup()
+  - group.createGroup()
+  - group.deleteGroup()
+  - group.viewMyGroups()
+  - group.addToGroup()
+  - group.removeFromGroup()
+  - group.leaveGroup()
 
 # Server / Backend
 
@@ -161,27 +150,48 @@ Friend model
 
 
 
+Group model
+
+```
+{
+    name: {
+        type:String
+    },
+    creator: {
+        type:Schema.Types.ObjectId, 
+        ref: 'users'
+    }
+    ,
+    members: [{
+        type:Schema.Types.ObjectId, 
+        ref: 'users'
+    }]
+}
+```
+
+
+
+
+
 ## Backend routes
 
-| HTTP Method | URL                  | Request Body                | Success status | Error Status | Description                                                  |
-| ----------- | -------------------- | --------------------------- | -------------- | ------------ | ------------------------------------------------------------ |
-| GET         | `/auth/me`           |                             | 200            | 404          | Check if user is logged in and return profile page           |
-| POST        | `/auth/signup`       | {name, email, password}     | 201            | 404          | Checks if fields not empty (422) and user not exists (409), then create user with encrypted password, and store user in session |
-| POST        | `/auth/login`        | {username, password}        | 200            | 401          | Checks if fields not empty (422), if user exists (404), and if password matches (404), then stores user in session |
-| POST        | `/auth/logout`       | (empty)                     | 204            | 400          | Logs out the user                                            |
-| POST        | /api/user            | {userName, email, password} |                |              | Used to create a new user.                                   |
-| DELETE      | /api/user/           | {myID}                      |                |              | Used to delete the user's account.                           |
-| GET         | /api/user            |                             |                |              |                                                              |
-| GET         | /api/friend          |                             |                |              |                                                              |
-| POST        | /api/friend          | {from,to}                   |                |              | Used to send a friend request where "from" is the sender's ID and "to" is the receiver's ID |
-| PUT         | /api/friend          | {replay,from,to}            |                |              | Used to replay by "accept" or "reject" to a friend request that is sent to userID "to" from a userID "from" |
-| DELETE      | /api/friend          | {from,to}                   |                |              | Used to delete the user "to" by the user "from"              |
-| GET         | /api/group/:id       |                             |                |              |                                                              |
-| POST        | /api/group/:id       | {name}(OPTIONAL)            |                |              | create a new group with name "name"                          |
-| DELETE      | /api/group/:id       | (empty)                     |                |              | delete the group                                             |
-| POST        | /api/group/add/:id   | {memberID}                  |                |              | add a user with ID "memberID" to the group                   |
-| POST        | api/group/remove/:id | {memberID}                  |                |              | remove the user with ID "memberID" from the group            |
-| POST        | api/group/leave/:id  | {myID}                      |                |              | leave the group                                              |
+| HTTP Method | URL                     | Request Body                        | Success status | Error Status | Description                                                  |
+| ----------- | ----------------------- | ----------------------------------- | -------------- | ------------ | ------------------------------------------------------------ |
+| POST        | `/auth/signup`          | {username, email, password}         | 201            | 404          | Checks if fields not empty (422) and user not exists (409), then create user with encrypted password, and store user in session |
+| POST        | `/auth/login`           | {username, email, password}         | 200            | 401          | Checks if fields not empty (422), if user exists (404), and if password matches (404), then stores user in session |
+| GET         | `/api/user/:id`         |                                     |                |              | Checks if the sent token (id) is valid and then send the user details. |
+| GET         | `/api/user/search/:id`  |                                     |                |              | Checks if the sent username (id) exists and then send the user details. |
+| DELETE      | `/api/user/:id`         |                                     |                |              | Used to delete the user's account.                           |
+| POST        | `/api/friend`           | {myUsername, theirUsername}         |                |              | Used to send a friend request where "myUsername" is the sender's username and "theirUsername" is the receiver's username |
+| PUT         | `/api/friend`           | {replay, myUsername, theirUsername} |                |              | Used to replay by "accept" or "reject" to a friend request that is sent to myUsername from a theirUsername |
+| DELETE      | `/api/friend`           | {myID, friendID}                    |                |              | Used to delete the user friendID by the user friendID        |
+| GET         | `/api/group/:id`        |                                     |                |              | send a group details                                         |
+| POST        | `/api/group/:id`        | {name}                              |                |              | create a new group with name "name" created by user ID (id)  |
+| PUT         | `/api/group/:id`        | (myID)                              |                |              | delete the group with ID (id)                                |
+| GET         | `/api/group/byuser/:id` |                                     |                |              | send the groups that im in                                   |
+| POST        | `/api/group/add/:id`    | {memberUsername}                    |                |              | add the user "memberUsername" to the group (id)              |
+| POST        | `api/group/remove/:id`  | {myID,memberUsername}               |                |              | remove the user "memberUsername" from the group (id)         |
+| POST        | `api/group/leave/:id`   | {myID}                              |                |              | leave the group (id)                                         |
 
 ## Links
 
