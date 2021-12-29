@@ -203,9 +203,9 @@ Group model
 
 The url to your repository and to your deployed project
 
-[Client repository Link](https://github.com/0Yasser/Final-Project/frontend)
+[Client repository Link](https://github.com/0Yasser/Final-Project/tree/main/frontend)
 
-[Server repository Link](https://github.com/0Yasser/Final-Project/backend)
+[Server repository Link](https://github.com/0Yasser/Final-Project/tree/main/backend)
 
 [Deployed App Link](http://heroku.com/)
 
