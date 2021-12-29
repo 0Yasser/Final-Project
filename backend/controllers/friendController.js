@@ -28,20 +28,31 @@ module.exports.getMyFriends = async (req, res) => {
   })
     .then((data) => {
       console.log("getMyFriends friend", data);
-      return data.map(e=>e.from.toString()==user._id.toString()?e.to:e.from);
+      return data.map((e) =>
+        e.from.toString() == user._id.toString() ? e.to : e.from
+      );
     })
     .catch((err) => "");
-    console.log('getMyFriends friends on outside',friends)
+  console.log("getMyFriends friends on outside", friends);
   const actualFriends = await User.find({
-   _id: { $in: friends }
+    _id: { $in: friends },
   })
-  .then((data) => {
-    console.log("getMyFriends actual friends")//, data[0]);
-    return data;
-  })
-  .catch((err) => "");
-  console.log("getMyFriends last thing", actualFriends.map(e=>{return{userName:e.userName,email:e.email}}));
-  res.status(200).send(actualFriends.map(e=>{return{userName:e?.userName,email:e?.email}}));
+    .then((data) => {
+      console.log("getMyFriends actual friends"); //, data[0]);
+      return data;
+    })
+    .catch((err) => "");
+  console.log(
+    "getMyFriends last thing",
+    actualFriends.map((e, i) => {
+      return { userName: e.userName, email: e.email };
+    })
+  );
+  res.status(200).send(
+    actualFriends.map((e) => {
+      return { userName: e?.userName, email: e?.email };
+    })
+  );
 };
 
 module.exports.getRecievedFriendRequests = async (req, res) => {
@@ -57,20 +68,45 @@ module.exports.getRecievedFriendRequests = async (req, res) => {
   })
     .then((data) => {
       // console.log("friend", data[0]);
-      console.log('friends dot map',data.map(e=>e?.from)[0])
+      console.log("friends dot map", data.map((e) => e?.from)[0]);
       return data;
     })
     .catch((err) => "");
-  const requester = await User.find({ _id: { $in: friends.map(e=>e?.from) } })
-  .then((data) => {
-    // console.log("friend requests", data[0]);
-    return data;
+  const requester = await User.find({
+    _id: { $in: friends.map((e) => e?.from) },
   })
-  .catch((err) => "");
-  res.status(200).send(requester.map(e=>e?.userName));
+    .then((data) => {
+      // console.log("friend requests", data[0]);
+      return data;
+    })
+    .catch((err) => "");
+  res.status(200).send(requester.map((e) => e?.userName));
+};
+
+module.exports.getRequestID = async (req, res) => {
+  let meAndFriendUsernames = req.params.usernames.split('-_-:-_-')
+  meAndFriendUsernames[0]=await User.find({userName:meAndFriendUsernames[0]}).then(data=>data[0]).catch(err=>'')
+  meAndFriendUsernames[1]=await User.find({userName:meAndFriendUsernames[1]}).then(data=>data[0]).catch(err=>'')
+
+  console.log('me and not me',meAndFriendUsernames)
+  const friendAsFriendRequest = await Friend.find({
+    $or: [
+      { $and: [{ to: meAndFriendUsernames[0]._id }, { from: meAndFriendUsernames[1]._id }] },
+      { $and: [{ from: meAndFriendUsernames[0]._id }, { to: meAndFriendUsernames[1]._id }] },
+    ],
+  })
+    .then((data) => {
+      console.log('getRequestID',data[0])
+      return data[0]})
+    .catch((err) => {
+      console.log('getRequestID error')
+      return {}});
+  friendAsFriendRequest
+    ? res.status(200).send(friendAsFriendRequest._id)
+    : res.status(400).send("");
 };
 module.exports.sendRequest = async (req, res, next) => {
-  console.log('sendrequest',req.body.myUsername,req.body.theirUsername)
+  console.log("sendrequest", req.body.myUsername, req.body.theirUsername);
   let curr_status = true;
   let curr_response = "";
 
@@ -139,7 +175,7 @@ module.exports.sendRequest = async (req, res, next) => {
 // 2- myUsername
 // 3- theirUsername
 module.exports.replayToRequest = async (req, res) => {
-  console.log('replay to request')
+  console.log("replay to request");
   let curr_status = true;
   let curr_response = "";
   const myID = await User.find({ userName: req.body.myUsername })

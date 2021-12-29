@@ -49,7 +49,6 @@ function App() {
           <Route path="/group/profile/:id" element={state.token?<Profile/>:<Navigate to="/signin"/>}/>
           <Route path="/search" element={state.token?<Search/>:<Navigate to="/signin"/>}/>
           <Route path='*' element={<Navigate to="/"/>}/>
-          {/* <Route path="*" element={<Home/>}/> */}
         </Routes>
         {/* {state?.token?<Footer/>:"'"} */}
       </header>

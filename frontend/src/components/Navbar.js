@@ -19,7 +19,7 @@ function Navbar() {
     e.preventDefault();
     if (e.target[0]?.value)
       axios
-        .post(`http://localhost:8888/api/group/${state.user._id}`, {
+        .post(`/api/group/${state.user._id}`, {
           name: e.target[0].value,
         })
         .then((res) => {
