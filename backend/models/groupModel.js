@@ -10,7 +10,6 @@ const groupSchema = new mongoose.Schema({
     }
     ,
     members: [{
-        unique:true,
         type:Schema.Types.ObjectId, 
         ref: 'users'
     }]

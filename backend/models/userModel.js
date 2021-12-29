@@ -1,6 +1,7 @@
 const mongoose = require ('mongoose')
 const {isEmail} = require('validator')
 const {isAlphanumeric} = require('validator')
+const bcrypt = require('bcrypt')
 var Schema = mongoose.Schema
 const userSchema = new mongoose.Schema({
     userName: {
@@ -35,6 +36,38 @@ const userSchema = new mongoose.Schema({
         type: Schema.Types.ObjectId, ref: 'groups'
     }]
 },{timestamp:true})
+
+
+userSchema.pre('save', async function(next) {
+    const salt = await bcrypt.genSalt();
+    this.password = await bcrypt.hash(this.password, salt)
+    next();
+  });
+
+  userSchema.statics.login = async function(username,email,password) {
+      console.log('login params',username,password,email)
+    const authorByEmail = await this.findOne({email:email});
+    const authorByUsername = await this.findOne({userName:username});
+    console.log('userByEmail,userByUsername in userSchema.statics.login equals',authorByEmail,authorByUsername)
+    if(authorByEmail){
+        const auth = await bcrypt.compare(password,authorByEmail.password)
+        if(auth){
+            return authorByEmail
+        }
+        else
+        console.log('false1')
+        throw Error('incorrect password')
+    }else if(authorByUsername){
+        const auth = await bcrypt.compare(password,authorByUsername.password)
+        if(auth){
+            return authorByUsername
+        }
+        else
+        console.log('false2')
+        throw Error('incorrect password')
+    }else
+    throw Error('incorrect email')
+}
 
 
 const User = mongoose.model('user',userSchema)

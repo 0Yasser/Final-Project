@@ -3,120 +3,199 @@ const User = require("../models/userModel");
 
 const handleErrors = (err) => err;
 
-module.exports.viewAllRequests = async (req, res) => {
-  res.send(
-    await Friend.find({})
-      .then((data) => data)
-      .catch((err) => handleErrors(err))
-  );
+// module.exports.viewAllRequests = async (req, res) => {
+//   res.send(
+//     await Friend.find({})
+//       .then((data) => data)
+//       .catch((err) => handleErrors(err))
+//   );
+// };
+
+// The body of sendRequest() contains :
+// 1- myUsername
+// 2- theirUsername
+
+module.exports.getMyFriends = async (req, res) => {
+  const user = await User.findById(req.params.id)
+    .then((data) => {
+      console.log("getMyFriends user", data);
+      return data;
+    })
+    .catch((err) => "");
+
+  const friends = await Friend.find({
+    $and: [{ _id: { $in: user?.friends } }, { status: 3 }],
+  })
+    .then((data) => {
+      console.log("getMyFriends friend", data);
+      return data.map(e=>e.from.toString()==user._id.toString()?e.to:e.from);
+    })
+    .catch((err) => "");
+    console.log('getMyFriends friends on outside',friends)
+  const actualFriends = await User.find({
+   _id: { $in: friends }
+  })
+  .then((data) => {
+    console.log("getMyFriends actual friends")//, data[0]);
+    return data;
+  })
+  .catch((err) => "");
+  console.log("getMyFriends last thing", actualFriends.map(e=>{return{userName:e.userName,email:e.email}}));
+  res.status(200).send(actualFriends.map(e=>{return{userName:e?.userName,email:e?.email}}));
 };
 
+module.exports.getRecievedFriendRequests = async (req, res) => {
+  const user = await User.findById(req.params.id)
+    .then((data) => {
+      // console.log("user", data[0]);
+      return data;
+    })
+    .catch((err) => "");
 
-
+  const friends = await Friend.find({
+    $and: [{ _id: { $in: user?.friends } }, { to: user?._id }, { status: 1 }],
+  })
+    .then((data) => {
+      // console.log("friend", data[0]);
+      console.log('friends dot map',data.map(e=>e?.from)[0])
+      return data;
+    })
+    .catch((err) => "");
+  const requester = await User.find({ _id: { $in: friends.map(e=>e?.from) } })
+  .then((data) => {
+    // console.log("friend requests", data[0]);
+    return data;
+  })
+  .catch((err) => "");
+  res.status(200).send(requester.map(e=>e?.userName));
+};
 module.exports.sendRequest = async (req, res, next) => {
+  console.log('sendrequest',req.body.myUsername,req.body.theirUsername)
   let curr_status = true;
   let curr_response = "";
 
-  if (req.body.from == req.body.to) {
-    curr_response = "you can't send to yourself";
-    curr_status = false;
-  }
-
-  User.findById(req.body.from)
-    .then(() => {})
+  const myID = await User.find({ userName: req.body.myUsername })
+    .then((data) => data[0]._id)
     .catch(() => {
       curr_response = "Your account DOESNT exist";
       curr_status = false;
+      return "";
     });
 
-  User.findById(req.body.to)
-    .then(() => {})
+  const theirID = await User.find({ userName: req.body.theirUsername })
+    .then((data) => data[0]._id)
     .catch(() => {
       curr_response = "This user no longer exists";
       curr_status = false;
+      return "";
     });
 
-  try {
-    const request = await Friend.find(
-      { $and: [{ from: req.body.from }, { to: req.body.to }, { status: 3 }] }
-    ).then((data)=>{return Friend.findOneAndUpdate(
-      { $and: [{ from: req.body.from }, { to: req.body.to }] },
-      { $set: { status: 3 } },
-      { upsert: true, new: true }
-    ); })
-    .catch((err)=>{
-      return Friend.findOneAndUpdate(
-        { $and: [{ from: req.body.from }, { to: req.body.to }] },
-        { $set: { status: 1 } },
-        { upsert: true, new: true }
-      ); 
-    })
-    
-    if (curr_status)
-      await User.findOneAndUpdate(
-        { _id: req.body.from },
-        { $addToSet: { friends: request._id } }
-      )
-        .then(() => {
-          User.findOneAndUpdate(
-            { _id: req.body.to },
-            { $addToSet: { friends: request._id } }
-          )
-            .then(() => {})
-            .catch((error) => {
-              curr_response = error;
-              curr_status = false;
-            });
-        })
-        .catch((error) => {
-          curr_response = error;
-          curr_status = false;
-        });
-  } catch (err) {
-    curr_response = curr_status ? err : curr_response;
+  if (req.body.myUsername == req.body.theirUsername) {
+    curr_response = "you can't send to yourself";
     curr_status = false;
   }
+  console.log("from", myID, "\nTo", theirID);
 
+  if (curr_status)
+    try {
+      const request = await Friend.find({
+        $and: [{ from: myID }, { to: theirID }],
+      })
+        .then((data) => {
+          curr_response =
+            data[0].statue == 3
+              ? "You already a friend"
+              : "You already sent a friend request";
+          curr_status = false;
+          return data[0];
+        })
+        .catch(() => {
+          return Friend.findOneAndUpdate(
+            { $and: [{ from: myID }, { to: theirID }] },
+            { $set: { status: 1 } },
+            { upsert: true, new: true }
+          );
+        });
+
+      if (curr_status) {
+        await User.findOneAndUpdate(
+          { _id: myID },
+          { $addToSet: { friends: request._id } }
+        );
+        await User.findOneAndUpdate(
+          { _id: theirID },
+          { $addToSet: { friends: request._id } }
+        );
+      }
+    } catch (err) {
+      curr_response = curr_status ? err : curr_response;
+      curr_status = false;
+    }
   res.send(curr_status ? "curr_response" : handleErrors(curr_response));
 };
 
-
-
+// The body of replayToRequest() contains :
+// 1- replay (either "accept or "reject")
+// 2- myUsername
+// 3- theirUsername
 module.exports.replayToRequest = async (req, res) => {
-  try {
-    if (req.body.replay === "accept") {
-      Friend.findOneAndUpdate(
-        {
-          $and: [{ from: req.body.from }, { to: req.body.to }],
-        },
-        { $set: { status: 3 } }
-      ).then(() => res.send("You have a new friend uWu"));
-    } else if (req.body.replay === "reject") {
-      const request = await Friend.findOneAndRemove({
-        from: req.body.from,
-        to: req.body.to,
-      });
-      await User.findOneAndUpdate(
-        { _id: req.body.from },
-        { $pull: { friends: request._id } }
-      );
-      await User.findOneAndUpdate(
-        { _id: req.body.to },
-        { $pull: { friends: request._id } }
-      );
-      res.send("friend request REJECTED");
-      res.end();
-    } else {
-      res.send("wrong entry");
-      res.end();
+  console.log('replay to request')
+  let curr_status = true;
+  let curr_response = "";
+  const myID = await User.find({ userName: req.body.myUsername })
+    .then((data) => data[0]._id)
+    .catch(() => {
+      curr_response = "Your account DOESNT exist";
+      curr_status = false;
+      return "";
+    });
+
+  const theirID = await User.find({ userName: req.body.theirUsername })
+    .then((data) => data[0]._id)
+    .catch(() => {
+      console.log("thier id error");
+      curr_response = "This user no longer exists";
+      curr_status = false;
+      return "";
+    });
+
+  if (curr_status)
+    try {
+      if (req.body.replay === "accept") {
+        Friend.findOneAndUpdate(
+          {
+            $and: [{ from: theirID }, { to: myID }],
+          },
+          { $set: { status: 3 } }
+        ).then(() => {
+          curr_response = "You have a new friend uWu";
+        });
+      } else if (req.body.replay === "reject") {
+        const request = await Friend.findOneAndRemove({
+          from: theirID,
+          to: myID,
+        });
+        await User.findOneAndUpdate(
+          { _id: myID },
+          { $pull: { friends: request._id } }
+        );
+        await User.findOneAndUpdate(
+          { _id: theirID },
+          { $pull: { friends: request._id } }
+        );
+        curr_response = "friend request REJECTED";
+      } else {
+        curr_response = "wrong entry";
+      }
+    } catch (err) {
+      res.send(err);
     }
-  } catch (err) {
-    res.send(err);
-    res.end();
-  }
+  res.send(curr_response);
 };
 
-
+// The body of removeFriend() contains :
+// 2- myID
+// 3- friendID
 module.exports.removeFriend = async (req, res) => {
   try {
     const request = await Friend.findOneAndRemove({

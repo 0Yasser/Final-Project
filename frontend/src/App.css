@@ -1,0 +1,134 @@
+.App {
+  text-align: center;
+}
+ul{
+  list-style: none;
+}
+.display-none{
+  display: none;
+}
+.color-inherit{
+  color: inherit ;
+}
+button{
+  cursor: pointer;
+}
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.App-header {
+  background: rgba(223,64,90,1);
+  background: linear-gradient(-45deg, rgb(192, 149, 238) 0%, rgb(247, 147, 163) 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+.wave{
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  line-height: 0;
+  z-index: 1;
+}
+
+.wave:before{
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('./images/wave.svg') repeat-x;
+  background-size: cover;
+  background-position: -1000px 0;
+  opacity: .2;
+  animation: waveOne 60s linear infinite;
+}
+@keyframes waveOne{
+  50%{
+    background-position: 0 0;
+  }
+}
+.wave:after{
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('images/wave.svg') repeat-x;
+  background-size: cover;
+  background-position: 2732px 0;
+  opacity: .3;
+  animation: waveOne 120s linear infinite;
+}
+
+
+.wave-top{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  line-height: 0;
+  z-index: 1;
+}
+
+.wave-top:before{
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('./images/waveTop.svg') repeat-x;
+  background-size: cover;
+  background-position: -1000px 100%;
+  opacity: .2;
+  animation: waveTwo 60s linear infinite;
+}
+@keyframes waveTwo{
+  50%{
+    background-position: 0 100%;
+  }
+}
+.wave-top:after{
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('images/waveTop.svg') repeat-x;
+  background-size: cover;
+  background-position: 2732px 100%;
+  opacity: .3;
+  animation: waveTwo 120s linear infinite;
+}
+
+
+/* 
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+} */
