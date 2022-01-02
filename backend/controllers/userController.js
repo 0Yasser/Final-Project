@@ -45,32 +45,42 @@ const handleErrors = (err) => {
 };
 
 module.exports.create_user = async (req, res) => {
+  let response_message = "";
   const user = await User.create({
     userName: req.body.userName,
     email: req.body.email,
     password: req.body.password,
   })
     .then((data) => data)
-    .catch((err) => "");
+    .catch((err) => {
+      response_message = err;
+      return "";
+    });
   if (user) {
     const token = createToken(user?._id);
-    res.send(token);
-  } else res.send("error creating account");
+    res.status(200).send(token);
+  } else res.status(400).send(handleErrors(response_message));
 };
+
 module.exports.log_user = async (req, res) => {
-  try {
-    console.log('log params',req.body.username, req.body.email, req.body.password)
-    const user = await User.login(req.body.username, req.body.email, req.body.password)
-    .then(data=>data).catch(err=>'');
-    console.log('useruseruser',user)
-    if(user){
+  // console.log('log params',req.body.username, req.body.email, req.body.password)
+  let response_message = "";
+  const user = await User.login(
+    req.body?.username,
+    req.body?.email,
+    req.body.password
+  )
+    .then((data) => data)
+    .catch((err) => {
+      console.log('loginlogin',err)
+      response_message=err;
+      return "";
+    });
+  console.log('useruseruser',user)
+  if (user) {
     const token = createToken(user?._id);
-    res.status(200).send(token);}
-    else
-    res.status(400).send('error')
-  } catch (err) {
-    res.send("sjaksfa");
-  }
+    res.status(200).send(token);
+  } else res.status(400).send(response_message);
 };
 
 module.exports.get_all_users = async (req, res) => {
@@ -92,17 +102,15 @@ module.exports.get_user_from_token = async (req, res) => {
     .catch((err) => {
       console.log("error1 at get user from token");
     });
-    
-  res.send(
-      {
-          _id:user?._id,
-          userName:user?.userName,
-          email:user?.email,
-          friends:user?.friends,
-          groups:user?.groups
-        });
-};
 
+  res.send({
+    _id: user?._id,
+    userName: user?.userName,
+    email: user?.email,
+    friends: user?.friends,
+    groups: user?.groups,
+  });
+};
 
 module.exports.get_username = async (req, res) => {
   console.log("////// ", req.params?.id);
@@ -112,7 +120,6 @@ module.exports.get_username = async (req, res) => {
   console.log("user to be searched is: ", user[0]);
   res.send(user[0]?.userName);
 };
-
 
 module.exports.delete_account = async (req, res) => {
   res.send(

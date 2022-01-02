@@ -45,28 +45,26 @@ userSchema.pre('save', async function(next) {
   });
 
   userSchema.statics.login = async function(username,email,password) {
-      console.log('login params',username,password,email)
+    //   console.log('login params',username,password,email)
     const authorByEmail = await this.findOne({email:email});
     const authorByUsername = await this.findOne({userName:username});
-    console.log('userByEmail,userByUsername in userSchema.statics.login equals',authorByEmail,authorByUsername)
+    // console.log('userByEmail,userByUsername in userSchema.statics.login equals',authorByEmail,authorByUsername)
     if(authorByEmail){
         const auth = await bcrypt.compare(password,authorByEmail.password)
         if(auth){
             return authorByEmail
         }
         else
-        console.log('false1')
-        throw Error('incorrect password')
+        throw('incorrect password')
     }else if(authorByUsername){
         const auth = await bcrypt.compare(password,authorByUsername.password)
         if(auth){
             return authorByUsername
         }
         else
-        console.log('false2')
-        throw Error('incorrect password')
+        throw('incorrect password')
     }else
-    throw Error('incorrect email')
+    throw('incorrect username or email')
 }
 
 
