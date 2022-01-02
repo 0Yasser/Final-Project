@@ -19,7 +19,7 @@ function Group() {
   useEffect(() => {
     console.log(params);
     axios
-      .get(`http://localhost:8888/api/group/${params.id}`)
+      .get(`/api/group/${params.id}`)
       .then((res) => {
         setGroup(res.data);
       })

@@ -15,7 +15,7 @@ function Search(props) {
     e.preventDefault();
     setRequest(false)
     axios
-      .get(`http://localhost:8888/api/user/search/${e.target[0].value}`)
+      .get(`/api/user/search/${e.target[0].value}`)
       .then((res) => {
         setUsername(res.data);
         console.log("datadatadata IS", res.data);
@@ -30,7 +30,7 @@ function Search(props) {
       console.log('props value',props?.props,state.user)
 
       if(props?.props)
-      axios.put(`http://localhost:8888/api/group/add/${props?.props}`,{
+      axios.put(`/api/group/add/${props?.props}`,{
         memberUsername:username
       })
       .then((res)=>{
@@ -40,7 +40,7 @@ function Search(props) {
         console.log('fail')
       })
       else
-      axios.post('http://localhost:8888/api/friend',{
+      axios.post('/api/friend',{
         myUsername:state.user.userName,
         theirUsername:username
       }).then(()=>{

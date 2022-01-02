@@ -19,7 +19,7 @@ function App() {
   const dispatch = useDispatch();
   useEffect(()=>{
     axios
-    .get(`http://localhost:8888/api/user/${state?.token}`)
+    .get(`/api/user/myDetails/${state?.token}`)
     .then((res) => {
         dispatch(updateUser({
           _id: res.data?._id,
