@@ -92,39 +92,50 @@ module.exports.get_all_users = async (req, res) => {
 };
 
 module.exports.get_user_from_token = async (req, res) => {
-  const user = await User.findById(
-    jwt.decode(
-      req.params.id,
-      "*addskhk(*^%udkfIWHDIOh73ryg73&*^^bnj2356mkf8dg23fsg4>dsf<LP"
-    ).id
-  )
-    .then((data) => data)
+  let response_message = "";
+  const id = await jwt.decode(
+    req.params.id,
+    "*addskhk(*^%udkfIWHDIOh73ryg73&*^^bnj2356mkf8dg23fsg4>dsf<LP"
+  )?.id
+  if(id){
+  let user = await User.findById(
+    id
+  ).then((data) => data)
     .catch((err) => {
-      console.log("error1 at get user from token");
+      response_message = err;
+      console.log("///////////\nerror1 at get user from token\n//////////",err);
     });
 
-  res.send({
+  res.status(200).send({
     _id: user?._id,
     userName: user?.userName,
     email: user?.email,
     friends: user?.friends,
     groups: user?.groups,
-  });
+  });}
+  else{
+    res.status(400).send('unvalid token')
+  }
 };
 
 module.exports.get_username = async (req, res) => {
-  console.log("////// ", req.params?.id);
-  const user = await User.find({ userName: req.params?.id })
+  console.log("////// ", req.params?.username);
+  const user = await User.find({ userName: req.params?.username })
     .then((data) => data)
-    .catch((err) => handleErrors(err));
-  console.log("user to be searched is: ", user[0]);
-  res.send(user[0]?.userName);
+    .catch((err) => {console.log('error at get_username function (user route):',err);return ''});
+  // console.log("user to be searched is: ", user[0]);
+  if(user)
+  res.status(200).send(user[0]?.userName);
+  else
+  res.status(400).send('no results');
 };
 
 module.exports.delete_account = async (req, res) => {
-  res.send(
-    await User.findOneAndRemove({ _id: req.params.id })
+  const user = await User.findOneAndRemove({ _id: req.params.id })
       .then((data) => data)
-      .catch((err) => handleErrors(err))
-  );
+      .catch((err) => '')
+  if(user)
+  res.status(200).send(user);
+  else
+  res.status(400).send('could not delete account')
 };
