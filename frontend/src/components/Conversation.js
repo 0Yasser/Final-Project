@@ -15,7 +15,7 @@ function Conversation(props) {
   socket.on("connect", () => {
     console.log("You got connected");
   });
-  socket.on("receive-message", (message) => {
+  socket.on("receive-message", (message,room) => {
     console.log("recieve message", message);
     setMessages([...messages, message]);
   });
@@ -25,7 +25,7 @@ function Conversation(props) {
 
     axios
       .get(
-        `http://localhost:8888/api/friend/request/${state.user.userName}-_-:-_-${params.id}`,
+        `/api/friend/request/${state.user.userName}-_-:-_-${params.id}`,
         {
           myUsername: state.user.userName,
           theirUsername: params.id,
@@ -53,20 +53,46 @@ function Conversation(props) {
 
   const doSomething = (e) => {
     e.preventDefault();
+    const now = new Date();
+    const obj = {
+      who: state.user.userName,
+      what: e.target[0].value,
+      when:
+        now.getFullYear() +
+        "-" +
+        (now.getMonth() + 1) +
+        "-" +
+        now.getDate() +
+        " " +
+        now.getHours() +
+        ":" +
+        now.getMinutes() +
+        ":" +
+        now.getSeconds(),
+    };
     console.log(e.target[0].value);
     // socket.emit('send-message',e.target[0].value)
-    socket.emit("send-message", e.target[0].value, room);
-    setMessages([...messages, e.target[0].value]);
+    socket.emit("send-message", obj, room);
+    obj.who = "me";
+    setMessages([...messages, obj]);
   };
+  const handleDeleteFriend = () => {
+    
+  }
   return (
     <div>
-      <div>Conversation</div>
-
+      <div>
+        {'from: '+state.user.userName+'\n with: '+params.id}
+        <button onClick={handleDeleteFriend}>Delete friend</button>
+        </div>
+        <button>call</button>
       {messages.length
-        ? messages.map((e) => {
+        ? messages.map((e, i) => {
             return (
-              <div>
-                <p>{e}</p>
+              <div key={i}>
+                <p>{e.who}</p>
+                <p>{e.what}</p>
+                <p>{e.when}</p>
               </div>
             );
           })
