@@ -26,7 +26,7 @@ function Home() {
   useEffect(() => {
     setUser(state.user);
 
-    axios.get(`/api/group/byuser/${state.user._id}`)
+    axios.get(`/api/groups/all/${state.user._id}`)
       .then((res) => { console.log('got groups successfully',res);setGroups(res.data); })
       .catch((err) => { console.log('failed getting groups',err) });
       
@@ -51,7 +51,7 @@ function Home() {
       <pre>  My Groups  </pre>
       {groups.length? groups?.map((e) => {
         return (
-          <div className="our-team" key={e?._id}>
+          <div  className="our-team" key={e?._id}>
               <Link to={`/Group/${e?._id}`}>
             <div>
               <Avatar
