@@ -1,6 +1,6 @@
 module.exports = {
   purge: ["./public/**/*.html", "./src/**/*.{js,jsx,ts,tsx,vue}"],
-  darkMode: false, // or 'media' or 'class'
+  darkMode: 'class', // or 'media' or 'class'
   theme: {
     spacing: {
       0:"0px",
@@ -39,6 +39,18 @@ module.exports = {
       2.5: "0.625rem",
       3.5: "0.875rem",
       "1/5": "20%",
+      "1/4": "25%",
+      "1/3":"33%",
+      "2/5": "40%",
+      "1/2":"50%",
+      "3/5": "60%",
+      "2/3":"66%",
+      "3/4": "75%",
+      "4/5":"80%",
+      "full":"100%",
+      "double":"200%",
+      'screen-height*(4/5)':'80vh',
+      'screen-width*(4/5)':'80vw',
     },
     extend: {
       width: {

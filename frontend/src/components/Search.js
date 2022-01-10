@@ -1,9 +1,9 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import "../styles/search.css";
-import Avatar from "boring-avatars";
 import { useSelector } from "react-redux";
-import randomColor from "randomcolor";
+import { createAvatar } from '@dicebear/avatars'
+import * as style from '@dicebear/avatars-bottts-sprites'
 
 
 function Search(props) {
@@ -15,7 +15,7 @@ function Search(props) {
     e.preventDefault();
     setRequest(false)
     axios
-      .get(`/api/user/search/${e.target[0].value}`)
+      .get(`http://localhost:3001/api/user/search/${e.target[0].value}`)
       .then((res) => {
         setUsername(res.data);
         console.log("datadatadata IS", res.data);
@@ -30,7 +30,7 @@ function Search(props) {
       console.log('props value',props?.props,state.user)
 
       if(props?.props)
-      axios.put(`/api/group/add/${props?.props}`,{
+      axios.put(`http://localhost:3001/api/group/add/${props?.props}`,{
         memberUsername:username
       })
       .then((res)=>{
@@ -51,6 +51,10 @@ function Search(props) {
 
       })
   }
+  const svgMaker = (seed)=> createAvatar(style,{
+    seed: seed,
+    dataUri: true,
+  })
   return (
     <div>
       <form onSubmit={handleSubmit}>
@@ -60,12 +64,7 @@ function Search(props) {
       {username ? (
         <div className="our-team">
           <div>
-            <Avatar
-              size={80}
-              name="fff"
-              variant="sunset"
-              colors={randomColor({luminosity: 'dark',count:5})}
-            />
+          <img src={svgMaker(username)} alt="avatar" className="h-11"/>
           </div>
           <div className="team-content">
             <h3 className="title">{username}</h3>

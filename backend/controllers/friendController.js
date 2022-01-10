@@ -1,5 +1,8 @@
 const Friend = require("../models/friendModel");
 const User = require("../models/userModel");
+const jwt = require('jsonwebtoken')
+const secret = "*addskhk(*^%udkfIWHDIOh73ryg73&*^^bnj2356mkf8dg23fsg4>dsf<LP";
+
 
 const handleErrors = (err) => err;
 
@@ -18,7 +21,7 @@ const handleErrors = (err) => err;
 module.exports.getMyFriends = async (req, res) => {
   const user = await User.findById(req.params.id)
     .then((data) => {
-      console.log("getMyFriends user", data);
+      console.log("getMyFriends user"); //, data);
       return data;
     })
     .catch((err) => "");
@@ -27,13 +30,13 @@ module.exports.getMyFriends = async (req, res) => {
     $and: [{ _id: { $in: user?.friends } }, { status: 3 }],
   })
     .then((data) => {
-      console.log("getMyFriends friend", data);
+      console.log("getMyFriends friend"); //, data);
       return data.map((e) =>
         e.from.toString() == user._id.toString() ? e.to : e.from
       );
     })
     .catch((err) => "");
-  console.log("getMyFriends friends on outside", friends);
+  console.log("getMyFriends friends on outside"); //, friends);
   const actualFriends = await User.find({
     _id: { $in: friends },
   })
@@ -84,23 +87,43 @@ module.exports.getRecievedFriendRequests = async (req, res) => {
 };
 
 module.exports.getRequestID = async (req, res) => {
-  let meAndFriendUsernames = req.params.usernames.split('-_-:-_-')
-  meAndFriendUsernames[0]=await User.find({userName:meAndFriendUsernames[0]}).then(data=>data[0]).catch(err=>'')
-  meAndFriendUsernames[1]=await User.find({userName:meAndFriendUsernames[1]}).then(data=>data[0]).catch(err=>'')
+  let meAndFriendUsernames = req.params.usernames.split("-_-:-_-");
+  meAndFriendUsernames[0] = await User.find({
+    userName: meAndFriendUsernames[0],
+  })
+    .then((data) => data[0])
+    .catch((err) => "");
+  meAndFriendUsernames[1] = await User.find({
+    userName: meAndFriendUsernames[1],
+  })
+    .then((data) => data[0])
+    .catch((err) => "");
 
-  console.log('me and not me',meAndFriendUsernames)
+  console.log("me and not me", meAndFriendUsernames);
   const friendAsFriendRequest = await Friend.find({
     $or: [
-      { $and: [{ to: meAndFriendUsernames[0]._id }, { from: meAndFriendUsernames[1]._id }] },
-      { $and: [{ from: meAndFriendUsernames[0]._id }, { to: meAndFriendUsernames[1]._id }] },
+      {
+        $and: [
+          { to: meAndFriendUsernames[0]._id },
+          { from: meAndFriendUsernames[1]._id },
+        ],
+      },
+      {
+        $and: [
+          { from: meAndFriendUsernames[0]._id },
+          { to: meAndFriendUsernames[1]._id },
+        ],
+      },
     ],
   })
     .then((data) => {
-      console.log('getRequestID',data[0])
-      return data[0]})
+      console.log("getRequestID", data[0]);
+      return data[0];
+    })
     .catch((err) => {
-      console.log('getRequestID error')
-      return {}});
+      console.log("getRequestID error");
+      return {};
+    });
   friendAsFriendRequest
     ? res.status(200).send(friendAsFriendRequest._id)
     : res.status(400).send("");
@@ -175,81 +198,112 @@ module.exports.sendRequest = async (req, res, next) => {
 // 2- myUsername
 // 3- theirUsername
 module.exports.replayToRequest = async (req, res) => {
-  console.log("replay to request");
-  let curr_status = true;
+  console.log("replay to request", req.body);
   let curr_response = "";
   const myID = await User.find({ userName: req.body.myUsername })
     .then((data) => data[0]._id)
     .catch(() => {
       curr_response = "Your account DOESNT exist";
-      curr_status = false;
       return "";
     });
 
   const theirID = await User.find({ userName: req.body.theirUsername })
     .then((data) => data[0]._id)
     .catch(() => {
-      console.log("thier id error");
       curr_response = "This user no longer exists";
-      curr_status = false;
       return "";
     });
 
-  if (curr_status)
-    try {
-      if (req.body.replay === "accept") {
-        Friend.findOneAndUpdate(
-          {
-            $and: [{ from: theirID }, { to: myID }],
-          },
-          { $set: { status: 3 } }
-        ).then(() => {
-          curr_response = "You have a new friend uWu";
+  if (!curr_response) {
+    console.log("main if entered"); //, curr_response);
+    if (req.body.replay === "accept") {
+      Friend.findOneAndUpdate(
+        {
+          $and: [{ from: theirID }, { to: myID }],
+        },
+        { $set: { status: 3 } }
+      )
+        .then(() => {
+          console.log("updated request successfully");
+        })
+        .catch(() => {
+          curr_response = "failed accepting request";
         });
-      } else if (req.body.replay === "reject") {
-        const request = await Friend.findOneAndRemove({
-          from: theirID,
-          to: myID,
+    } else if (req.body.replay === "reject") {
+      const request = await Friend.findOneAndRemove({
+        from: theirID,
+        to: myID,
+      })
+        .then(() => {
+          console.log("rejected request successfully");
+        })
+        .catch(() => {
+          curr_response = "failed removing request";
+          return "";
         });
+      if (request) {
         await User.findOneAndUpdate(
           { _id: myID },
-          { $pull: { friends: request._id } }
-        );
+          { $pull: { friends: request?._id } }
+        )
+          .then(() => {
+            console.log("updated first user successfully");
+          })
+          .catch(() => {
+            curr_response = "failed updating first user";
+          });
         await User.findOneAndUpdate(
           { _id: theirID },
-          { $pull: { friends: request._id } }
-        );
-        curr_response = "friend request REJECTED";
-      } else {
-        curr_response = "wrong entry";
+          { $pull: { friends: request?._id } }
+        )
+          .then(() => {
+            console.log("updated second user successfully");
+          })
+          .catch(() => {
+            curr_response = "failed updating second user";
+          });
       }
-    } catch (err) {
-      res.send(err);
+    } else {
+      curr_response = "wrong entry";
     }
-  res.send(curr_response);
+  }
+  if (curr_response) {
+    console.log("fail request");
+    res.status(400).send(curr_response);
+  } else {
+    console.log("success request");
+    res.status(200).send("responding to friend request secceeded!");
+  }
 };
 
 // The body of removeFriend() contains :
 // 2- myID
 // 3- friendID
 module.exports.removeFriend = async (req, res) => {
-  try {
+  let curr_response = "";
+  console.log('req.headers',req.headers?.authorization)
+  const myID=jwt.verify(req.headers?.authorization,secret)?.id
+  const friendID= await User.find({userName:req.params.id}).then((data)=>data[0]).catch(()=>"")
     const request = await Friend.findOneAndRemove({
-      from: req.body.myID,
-      to: req.body.friendID,
-    });
+      $or: [
+        { from: myID, to: friendID },
+        { from: friendID, to: myID },
+      ],
+    }).then((data)=>{console.log('removeFriend step1 success',data); return data}).catch((err)=>{console.log('removeFriend step1 failed'); curr_response=err; return ''})
     await User.findOneAndUpdate(
-      { _id: req.body.myID },
-      { $pull: { friends: request._id } }
-    );
+      { _id: myID },
+      { $pull: { friends: request?._id } }
+    ).then((data)=>{console.log('removeFriend step2 success',data); return data}).catch((err)=>{console.log('removeFriend step2 failed'); curr_response=err; return ''})
     await User.findOneAndUpdate(
-      { _id: req.body.friendID },
-      { $pull: { friends: request._id } }
-    );
-    res.send("friend deleted");
-    res.end();
-  } catch (err) {
-    res.send(err);
-    res.end();
+      { _id: friendID },
+      { $pull: { friends: request?._id } }
+    ).then((data)=>{console.log('removeFriend step3 and final success',data); return data}).catch((err)=>{console.log('removeFriend step3 failed'); curr_response=err; return ''})
+
+    if (curr_response) {
+    console.log("fail deleting friend",curr_response);
+    res.status(400).send(curr_response);
+  } else {
+    console.log("success deleting friend");
+    res.status(200).send("responding to friend request secceeded!");
   }
 };

@@ -10,7 +10,7 @@ const groupsRoute = require('./routes/groupRoute')
 const cookieParser = require('cookie-parser')
 
 
-const PORT = process.env.PORT || 8888;
+const PORT = process.env.PORT || 3001;
 const connection_url = 'mongodb+srv://OwnerYasser:Atlas123@cluster0.9geix.mongodb.net/TheDatabase?retryWrites=true&w=majority'
 
 
@@ -32,12 +32,23 @@ io.on('connection',(socket)=>{
     socket.to(room).emit('receive-message',message)
     console.log(message)
   })
+  socket.on('send-notification',(message,room)=>{
+    //socket.broadcast.emit('receive-message',message)
+    socket.to(room).emit('receive-notification',message)
+    console.log(message)
+  })
   socket.on("join-room",room=>{
     socket.join(room)
   })
   socket.on('disconnect', () => {
     console.log('user disconnected');
   });
+  socket.on("calluser",({ userToCall, signalData, from, name})=> {
+    io.to(userToCall).emit("calluser",{signal:signalData,from,name})
+  })
+  socket.on('answercall',(data)=>{
+    io.to(data.to).emit("callaccepted",data.signal)
+  })
 })
 io.on("reconnect", (attempt) => {
   console.log('a user reconnected')

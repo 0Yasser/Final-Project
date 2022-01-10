@@ -1,5 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { updateLoginToken } from "../reducers/login";
 
 function Signin() {
   const [username,setUsername] = useState('')
@@ -9,24 +11,50 @@ function Signin() {
   const [emailFAILURE,setEmailFAILURE] = useState('')
   const [passwordFAILURE,setPasswordFAILURE] = useState('')
   const [formType, setFormType] = useState("login");
+  const [formTypeCopy, setFormTypeCopy] = useState("signup");
+  const dispatch = useDispatch()
 
   const signupHandler = () => {
+    setUsernameFAILURE('')
 
+              setEmailFAILURE('')
+
+              setPasswordFAILURE('')
     console.log('signup handler2',username, email, password);
-    // axios
-    //   .post("/auth/signup", {
-    //     userName: e.target[0].value,
-    //     email: e.target[1].value,
-    //     password: e.target[2].value,
-    //   })
-    //   .then((res) => {
-    //     console.log("success", res.data);
-    //     window.localStorage.setItem("chatUpToken", res.data);
-    //     window.location.reload();
-    //   })
-    //   .catch((err) => {
-    //     console.log("fail", err.response.data);
-    //   });
+    axios
+      .post("/auth/signup", {
+        username,
+        email,
+        password
+      })
+      .then((res) => {
+        console.log("success", res.data);
+        window.localStorage.setItem("chatUpToken", res.data);
+        dispatch(updateLoginToken(window.localStorage.getItem('chatUpToken')))
+        // window.location.reload();
+      })
+      .catch((err) => {
+        console.log("fail", err.response.data);
+        for(let i=0;i<err.response.data.length;i++){
+          switch (err.response.data[i].path) {
+            case 'userName':
+              setUsernameFAILURE(err.response.data[i].message)
+              break;
+            case 'email':
+              setEmailFAILURE(err.response.data[i].message)
+              break;
+            case 'password':
+              setPasswordFAILURE(err.response.data[i].message)
+              break;
+            default:
+              setEmailFAILURE('network error')
+              setUsernameFAILURE('network error')
+              setPasswordFAILURE('network error')
+              break;
+          }
+        }
+        
+      });
   };
   const loginHandler = () => {
     console.log('login handler2',username, email, password);
@@ -41,8 +69,10 @@ function Signin() {
       })
       .then((res) => {
         console.log("success", res.data);
+        
         window.localStorage.setItem("chatUpToken", res.data);
-        window.location.reload();
+        dispatch(updateLoginToken(window.localStorage.getItem('chatUpToken')))
+        // window.location.reload();
       })
       .catch((err) => {
         console.log("fail", err.response.data);
@@ -70,6 +100,10 @@ function Signin() {
         setAnimationTest(false);
       }, 200);
     }, 200);
+
+    setTimeout(() => {
+      setFormTypeCopy(formType)
+      }, 600);
   }
   const [animationTest, setAnimationTest] = useState(false);
   return (
@@ -159,14 +193,14 @@ function Signin() {
         </div>
         </div>
         <div className="flex items-center justify-between">
-          <button
+          <input
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            type="button"
+            type="submit"
             onClick={()=>formType==='login'?loginHandler():signupHandler()}
-          >
-            {formType==='login'?'Log in':'Sign Up'}
-          </button>
+            value={formType==='login'?'Log in':'Sign Up'}
+          />
           <button
+          type="button'"
             className=" inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
             onClick={() => handleSwitching()}
           >
@@ -174,8 +208,8 @@ function Signin() {
           </button>
         </div>
       </form>
-      <div className={`absolute block bg-red-200 top-1/2 right-1/2 z-10 ${animationTest?'':'hidden'}`}>{formType}</div>
-      <div className={`absolute block bg-pink-800 ease-in-out duration-700 rounded-md ${animationTest?'top-0 left-0 w-double h-double':'bottom-0 right-0 w-0 h-0'}`}></div>
+      <div className={`font-mono font-bold text-3xl md:text-6xl absolute top-0 left-0 pt-1/4 pl-1/4 text-gray-500 z-10 ${animationTest?'transform scale-50 animate-ping':'transform scale-0'} transition-all duration-150 ease-linear `}>{formTypeCopy}</div>
+      <div className={`absolute block bg-gradient-to-tr from-red-300 to-purple-300 ease-in-out duration-700 rounded-tl-md rounded-br-md ${animationTest?'top-0 left-0 w-double h-double':'bottom-0 right-0 w-0 h-0'}`}></div>
     </div>
   );
 }

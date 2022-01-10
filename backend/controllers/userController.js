@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const Friend = require("../models/friendModel");
 const maxAge = 12 * 30 * 24 * 60 * 60;
 
+const secret = "*addskhk(*^%udkfIWHDIOh73ryg73&*^^bnj2356mkf8dg23fsg4>dsf<LP";
 const createToken = (id) => {
   return jwt.sign(
     { id },
@@ -10,6 +11,10 @@ const createToken = (id) => {
     { expiresIn: maxAge }
   );
 };
+
+module.exports.checkToken = (token) => {
+  return jwt.decode(token,secret)?.id
+}
 
 const handleErrors = (err) => {
   console.log(err.message, err.code);
@@ -47,7 +52,7 @@ const handleErrors = (err) => {
 module.exports.create_user = async (req, res) => {
   let response_message = "";
   const user = await User.create({
-    userName: req.body.userName,
+    userName: req.body.username,
     email: req.body.email,
     password: req.body.password,
   })
@@ -97,7 +102,7 @@ module.exports.get_user_details = async (req, res) => {
   let response_message = "";
   const id = await jwt.decode(
     req.params.token,
-    "*addskhk(*^%udkfIWHDIOh73ryg73&*^^bnj2356mkf8dg23fsg4>dsf<LP"
+    secret
   )?.id;
   if (id) {
     let user = await User.findById(id)
@@ -141,7 +146,7 @@ module.exports.delete_account = async (req, res) => {
   let response_message = "";
   const id = await jwt.decode(
     req.params.token,
-    "*addskhk(*^%udkfIWHDIOh73ryg73&*^^bnj2356mkf8dg23fsg4>dsf<LP"
+    secret
   )?.id;
   if (id) {
     const user = await User.findOneAndRemove({ _id: id })
